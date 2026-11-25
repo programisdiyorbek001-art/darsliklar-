@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X va O - Ideal O'yin</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent-x: #f43f5e;
+      --accent-o: #38bdf8;
+      --text: #f8fafc;
+      --subtext: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--accent-x), var(--accent-o));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* REJIM SELEKTORI */
+    .mode-select {
+      display: flex;
+      gap: 10px;
+      background: #0f172a;
+      padding: 6px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--subtext);
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .mode-btn.active {
+      background: #334155;
+      color: var(--text);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* HISOB-KITOB JADVALI */
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(255,255,255,0.03);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .score-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .score-box.x { color: var(--accent-x); }
+    .score-box.o { color: var(--accent-o); }
+    .score-box.ties { color: var(--subtext); }
+
+    .score-num {
+      font-size: 1.2rem;
+    }
+
+    /* O'YIN KATTAKLARI (3x3 GRID) */
+    .status-text {
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      font-weight: 600;
+      min-height: 27px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      background: #0f172a;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+    }
+
+    .cell:hover {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: scale(1.02);
+    }
+
+    .cell.x {
+      color: var(--accent-x);
+      text-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+    }
+
+    .cell.o {
+      color: var(--accent-o);
+      text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .cell.winning {
+      animation: pulse 1s infinite alternate;
+      border-color: #10b981;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.05); }
+    }
+
+    /* QAYTA BOSH LASH TUGMASI */
+    .reset-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .reset-btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>X va O O'yini</h1>
+
+    <!-- Rejim tanlash -->
+    <div class="mode-select">
+      <button class="mode-btn active" id="btn-p2p" onclick="setMode('p2p')">👥 2 Kishilik</button>
+      <button class="mode-btn" id="btn-bot" onclick="setMode('bot')">🤖 Botga Qarshi</button>
+    </div>
+
+    <!-- Ochko o'ynalishi -->
+    <div class="scoreboard">
+      <div class="score-box x">
+        <span>X (O'yinchi)</span>
+        <span class="score-num" id="score-x">0</span>
+      </div>
+      <div class="score-box ties">
+        <span>Durrang</span>
+        <span class="score-num" id="score-ties">0</span>
+      </div>
+      <div class="score-box o">
+        <span id="label-o">O (O'yinchi)</span>
+        <span class="score-num" id="score-o">0</span>
+      </div>
+    </div>
+
+    <!-- Holat matni -->
+    <div class="status-text" id="status">"X" o'yinchining navbati</div>
+
+    <!-- 3x3 Kataklar -->
+    <div class="board" id="board">
+      <div class="cell" onclick="makeMove(0)"></div>
+      <div class="cell" onclick="makeMove(1)"></div>
+      <div class="cell" onclick="makeMove(2)"></div>
+      <div class="cell" onclick="makeMove(3)"></div>
+      <div class="cell" onclick="makeMove(4)"></div>
+      <div class="cell" onclick="makeMove(5)"></div>
+      <div class="cell" onclick="makeMove(6)"></div>
+      <div class="cell" onclick="makeMove(7)"></div>
+      <div class="cell" onclick="makeMove(8)"></div>
+    </div>
+
+    <!-- Qayta boshlash -->
+    <button class="reset-btn" onclick="resetGame()">Yangi O'yin 🔄</button>
+  </div>
+
+  <script>
+    let boardState = ["", "", "", "", "", "", "", "", ""];
+    let currentPlayer = "X";
+    let isGameActive = true;
+    let gameMode = "p2p"; // 'p2p' yoki 'bot'
+
+    let scores = { X: 0, O: 0, ties: 0 };
+
+    const winConditions = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], // Satrlar
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], // Ustunlar
+      [0, 4, 8], [2, 4, 6]             // Diagonallar
+    ];
+
+    const statusDisplay = document.getElementById('status');
+    const cells = document.querySelectorAll('.cell');
+
+    function setMode(mode) {
+      gameMode = mode;
+      document.getElementById('btn-p2p').classList.toggle('active', mode === 'p2p');
+      document.getElementById('btn-bot').classList.toggle('active', mode === 'bot');
+      document.getElementById('label-o').textContent = mode === 'bot' ? 'O (Bot)' : 'O (O\'yinchi)';
+      resetScores();
+      resetGame();
+    }
+
+    function makeMove(index) {
+      if (boardState[index] !== "" || !isGameActive) return;
+
+      executeMove(index, currentPlayer);
+
+      if (isGameActive && gameMode === "bot" && currentPlayer === "O") {
+        setTimeout(botMove, 400); // Bot 0.4 soniyadan so'ng javob beradi
+      }
+    }
+
+    function executeMove(index, player) {
+      boardState[index] = player;
+      cells[index].textContent = player;
+      cells[index].classList.add(player.toLowerCase());
+
+      if (checkWin(player)) {
+        handleWin(player);
+      } else if (boardState.every(cell => cell !== "")) {
+        handleDraw();
+      } else {
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        statusDisplay.textContent = `"${currentPlayer}" o'yinchining navbati`;
+      }
+    }
+
+    /* BOT MANTIG'I */
+    function botMove() {
+      if (!isGameActive) return;
+
+      // 1. Bot yutishi mumkin bo'lgan katakni qidiradi
+      let bestMove = findBestMove("O");
+      // 2. Yutqazmaslik uchun raqibni to'sadigan katakni qidiradi
+      if (bestMove === -1) bestMove = findBestMove("X");
+      // 3. Markazni egallash
+      if (bestMove === -1 && boardState[4] === "") bestMove = 4;
+      // 4. Tasodifiy bo'sh katakni tanlash
+      if (bestMove === -1) {
+        let emptyIndices = boardState
+          .map((val, idx) => val === "" ? idx : null)
+          .filter(val => val !== null);
+        bestMove = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+      }
+
+      executeMove(bestMove, "O");
+    }
+
+    function findBestMove(player) {
+      for (let condition of winConditions) {
+        const [a, b, c] = condition;
+        const values = [boardState[a], boardState[b], boardState[c]];
+        if (values.filter(v => v === player).length === 2 && values.includes("")) {
+          return condition[values.indexOf("")];
+        }
+      }
+      return -1;
+    }
+
+    /* G'ALABA VA DURRANG TEKSHIRUVI */
+    function checkWin(player) {
+      return winConditions.some(condition => {
+        if (condition.every(index => boardState[index] === player)) {
+          condition.forEach(index => cells[index].classList.add('winning'));
+          return true;
+        }
+        return false;
+      });
+    }
+
+    function handleWin(winner) {
+      isGameActive = false;
+      scores[winner]++;
+      updateScoreDisplay();
+      statusDisplay.textContent = `🎉 "${winner}" g'alaba qozondi!`;
+    }
+
+    function handleDraw() {
+      isGameActive = false;
+      scores.ties++;
+      updateScoreDisplay();
+      statusDisplay.textContent = `🤝 Durrang bo'ldi!`;
+    }
+
+    function updateScoreDisplay() {
+      document.getElementById('score-x').textContent = scores.X;
+      document.getElementById('score-o').textContent = scores.O;
+      document.getElementById('score-ties').textContent = scores.ties;
+    }
+
+    function resetScores() {
+      scores = { X: 0, O: 0, ties: 0 };
+      updateScoreDisplay();
+    }
+
+    function resetGame() {
+      boardState = ["", "", "", "", "", "", "", "", ""];
+      isGameActive = true;
+      currentPlayer = "X";
+      statusDisplay.textContent = `"X" o'yinchining navbati`;
+
+      cells.forEach(cell => {
+        cell.textContent = "";
+        cell.className = "cell";
+      });
+    }
+  </script>
+
+</body>
+</html>
+
